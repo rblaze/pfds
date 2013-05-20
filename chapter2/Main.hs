@@ -10,6 +10,7 @@ import Data.List (tails)
 import PFDS21
 import PFDS2Set
 import PFDS22
+import PFDS23
 
 tests :: [Test]
 tests = [
@@ -17,16 +18,17 @@ tests = [
         testProperty "works as tails" prop_tails,
         testCase "book sample" testSample21
       ],
-    testGroup "basic set" [
-        testProperty "all members found" (prop_setMembersFound member),
-        testProperty "some members found" (prop_setSomeMembersFound member),
-        testProperty "no members in empty set" (prop_setEmpty member)
-      ],
-    testGroup "optimized member" [
-        testProperty "all members found" (prop_setMembersFound member22),
-        testProperty "some members found" (prop_setSomeMembersFound member22),
-        testProperty "no members in empty set" (prop_setEmpty member22)
-      ]
+    setTests "basic set" member insert,
+    setTests "optimized member" member22 insert,
+    setTests "optimized insert" member insert23
+  ]
+
+setTests :: String -> (Int -> Tree Int -> Bool) -> (Int -> Tree Int -> Tree Int) -> Test
+setTests name memberFunc insertFunc = testGroup name [
+    testProperty "all members found" (prop_setMembersFound memberFunc insertFunc),
+    testProperty "some members found" (prop_setSomeMembersFound memberFunc insertFunc),
+    testProperty "no members in empty set" (prop_setEmpty memberFunc),
+    testCase "fixed case" (testFixedSet memberFunc insertFunc)
   ]
 
 main :: IO ()
@@ -38,13 +40,22 @@ prop_tails xs = suffixes xs == tails xs
 testSample21 :: Assertion
 testSample21 = suffixes ([1,2,3,4] :: [Int]) @?= [[1,2,3,4],[2,3,4],[3,4],[4],[]]
 
-prop_setMembersFound :: (Int -> Tree Int -> Bool) -> [Int] -> Bool
-prop_setMembersFound check xs = all (`check` set) xs
-    where set = foldr insert Empty xs
+testFixedSet :: (Int -> Tree Int -> Bool) -> (Int -> Tree Int -> Tree Int) -> Assertion
+testFixedSet check ins = (present && nonpresent) @?= True
+    where
+    numbers = [6,8,4,2,10,0,14,12]
+    set = foldr ins Empty numbers
+    present = all (`check` set) numbers
+    nonpresent = not $ any (`check` set) ((-1) : [n + 1 | n <- numbers])
 
-prop_setSomeMembersFound :: (Int -> Tree Int -> Bool) -> [Int] -> Bool
-prop_setSomeMembersFound check xs = all (\x -> check (x + 1) set == elem (x + 1) xs) xs
-    where set = foldr insert Empty xs
+prop_setMembersFound :: (Int -> Tree Int -> Bool) -> (Int -> Tree Int -> Tree Int) -> [Int] -> Bool
+prop_setMembersFound check ins xs = all (`check` set) xs
+    where set = foldr ins Empty xs
+
+prop_setSomeMembersFound :: (Int -> Tree Int -> Bool) -> (Int -> Tree Int -> Tree Int) -> [Int] -> Bool
+prop_setSomeMembersFound check ins xs
+    = all (\x -> check (x + 1) set == elem (x + 1) xs) xs
+    where set = foldr ins Empty xs
 
 prop_setEmpty :: (Int -> Tree Int -> Bool) -> [Int] -> Bool
-prop_setEmpty check = all (\x -> not (check x Empty))
+prop_setEmpty check xs = not $ any (`check` Empty) xs
