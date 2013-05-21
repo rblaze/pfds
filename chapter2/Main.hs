@@ -11,6 +11,7 @@ import PFDS21
 import PFDS2Set
 import PFDS22
 import PFDS23
+import PFDS24
 
 tests :: [Test]
 tests = [
@@ -20,7 +21,8 @@ tests = [
       ],
     setTests "basic set" member insert,
     setTests "optimized member" member22 insert,
-    setTests "optimized insert" member insert23
+    setTests "optimized insert" member insert23,
+    setTests "overoptimized insert" member insert24
   ]
 
 setTests :: String -> (Int -> Tree Int -> Bool) -> (Int -> Tree Int -> Tree Int) -> Test
