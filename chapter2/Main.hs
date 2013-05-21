@@ -50,10 +50,10 @@ testFixedSet check ins = (present && nonpresent) @?= True
     nonpresent = not $ any (`check` set) ((-1) : [n + 1 | n <- numbers])
 
 prop_allElemsPresent :: (Int -> Tree Int -> Tree Int) -> [Int] -> Bool
-prop_allElemsPresent ins xs = uniq xs == sort (toList set)
+prop_allElemsPresent ins xs = uniq == sort (toList set)
     where
     set = foldr ins Empty xs
-    uniq ys = map head $ group $ sort ys
+    uniq = map head $ group $ sort xs
 
 prop_setMembersFound :: (Int -> Tree Int -> Bool) -> (Int -> Tree Int -> Tree Int) -> [Int] -> Bool
 prop_setMembersFound check ins xs = all (`check` set) xs
