@@ -4,14 +4,23 @@ import Test.Framework (defaultMain, testGroup, Test)
 import Test.Framework.Providers.HUnit
 import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.HUnit ((@?=), Assertion)
+import Test.QuickCheck (Arbitrary(..), choose)
 
 import Data.List (tails, group, sort)
+import Control.Monad
 
 import PFDS21
 import PFDS2Set
 import PFDS22
 import PFDS23
 import PFDS24
+import PFDS25
+
+newtype SmallInt = SmallInt Int
+    deriving Show
+
+instance Arbitrary SmallInt where
+    arbitrary = liftM SmallInt $ choose (1, 20)
 
 tests :: [Test]
 tests = [
@@ -22,7 +31,10 @@ tests = [
     setTests "basic set" member insert,
     setTests "optimized member" member22 insert,
     setTests "optimized insert" member insert23,
-    setTests "overoptimized insert" member insert24
+    setTests "overoptimized insert" member insert24,
+    testGroup "collapsed trees" [
+        testProperty "nelems in complete tree" prop_depth
+      ]
   ]
 
 setTests :: String -> (Int -> Tree Int -> Bool) -> (Int -> Tree Int -> Tree Int) -> Test
@@ -39,6 +51,10 @@ main = defaultMain tests
 
 prop_tails :: [Int] -> Bool
 prop_tails xs = suffixes xs == tails xs
+
+prop_depth :: SmallInt -> Bool
+prop_depth (SmallInt depth) = length (toList set) == (2 ^ depth) - 1
+    where set = mktree25a 'а' depth
 
 testSample21 :: Assertion
 testSample21 = suffixes ([1,2,3,4] :: [Int]) @?= [[1,2,3,4],[2,3,4],[3,4],[4],[]]
