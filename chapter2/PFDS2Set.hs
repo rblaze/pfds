@@ -16,3 +16,7 @@ insert val node@(Tree left key right)
     | val < key     = Tree (insert val left) key right
     | val > key     = Tree left key (insert val right)
     | otherwise     = node
+
+toList :: Tree a -> [a]
+toList Empty = []
+toList (Tree left key right) = toList left ++ [key] ++ toList right
