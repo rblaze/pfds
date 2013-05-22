@@ -16,11 +16,17 @@ import PFDS23
 import PFDS24
 import PFDS25
 
-newtype SmallInt = SmallInt Int
+newtype TreeDepth = TreeDepth Int
     deriving Show
 
-instance Arbitrary SmallInt where
-    arbitrary = liftM SmallInt $ choose (1, 20)
+newtype NodeCount = NodeCount Int
+    deriving Show
+
+instance Arbitrary TreeDepth where
+    arbitrary = liftM TreeDepth $ choose (1, 20)
+
+instance Arbitrary NodeCount where
+    arbitrary = liftM NodeCount $ choose (0, 10000)
 
 tests :: [Test]
 tests = [
@@ -34,6 +40,10 @@ tests = [
     setTests "overoptimized insert" member insert24,
     testGroup "collapsed trees" [
         testProperty "nelems in complete tree" prop_depth
+      ],
+    testGroup "almost balanced trees" [
+        testProperty "nelems in tree" prop_count,
+        testProperty "balance" prop_balance
       ]
   ]
 
@@ -52,9 +62,23 @@ main = defaultMain tests
 prop_tails :: [Int] -> Bool
 prop_tails xs = suffixes xs == tails xs
 
-prop_depth :: SmallInt -> Bool
-prop_depth (SmallInt depth) = length (toList set) == (2 ^ depth) - 1
+prop_depth :: TreeDepth -> Bool
+prop_depth (TreeDepth depth) = length (toList set) == (2 ^ depth) - 1
     where set = mktree25a 'а' depth
+
+prop_count :: NodeCount -> Bool
+prop_count (NodeCount cnt) = length (toList set) == cnt
+    where set = mktree25b 'b' cnt
+
+prop_balance :: NodeCount -> Bool
+prop_balance (NodeCount cnt) = go set
+    where
+    set = mktree25b 'b' cnt
+    go :: Tree a -> Bool
+    go Empty = True
+    go (Tree left _ right) = 
+        go left && go right &&
+        abs (length (toList left) - length (toList right)) <= 1
 
 testSample21 :: Assertion
 testSample21 = suffixes ([1,2,3,4] :: [Int]) @?= [[1,2,3,4],[2,3,4],[3,4],[4],[]]
