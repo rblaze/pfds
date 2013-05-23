@@ -5,7 +5,7 @@ import Test.Framework.Providers.QuickCheck2 (testProperty)
 
 import Data.List(sort)
 
-import BaseHeap
+import LeftistHeap
 import PFDS33
 
 main :: IO ()

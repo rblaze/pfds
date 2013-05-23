@@ -1,6 +1,6 @@
 module PFDS33 where
 
-import BaseHeap
+import LeftistHeap
 
 fromList :: Ord a => [a] -> Heap a
 fromList elems = go $ map (\v -> Heap 1 v Empty Empty) elems

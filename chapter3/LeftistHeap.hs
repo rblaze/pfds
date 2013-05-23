@@ -1,4 +1,4 @@
-module BaseHeap where
+module LeftistHeap where
 
 data Heap a = Empty
             | Heap !Int !a !(Heap a) !(Heap a)
