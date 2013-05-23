@@ -6,7 +6,9 @@ import Test.Framework.Providers.QuickCheck2 (testProperty)
 import Test.HUnit ((@?=), Assertion)
 import Test.QuickCheck (Arbitrary(..), choose)
 
-import Data.List (tails, group, sort)
+import Data.List (tails, group, sort, nubBy)
+import Data.Function
+import Data.Maybe
 import Control.Monad
 
 import PFDS21
@@ -15,6 +17,7 @@ import PFDS22
 import PFDS23
 import PFDS24
 import PFDS25
+import qualified PFDS26 as M
 
 newtype TreeDepth = TreeDepth Int
     deriving Show
@@ -44,6 +47,9 @@ tests = [
     testGroup "almost balanced trees" [
         testProperty "nelems in tree" prop_count,
         testProperty "balance" prop_balance
+      ],
+    testGroup "finite map" [
+        testCase "fixed case" testFixedMap
       ]
   ]
 
@@ -58,6 +64,16 @@ setTests name memberFunc insertFunc = testGroup name [
 
 main :: IO ()
 main = defaultMain tests
+
+testFixedMap :: Assertion
+testFixedMap = (present && nonpresent) @?= True
+    where
+    elements = [(6,'a'),(8,'b'),(4,'c'),(2,'d'),(10,'e'),(2,'f'),(2,'g'),(2,'h'),
+                (2,'i'),(2,'j'),(0,'k'),(14,'l'),(2,'m'),(2,'n'),(2,'o'),(12,'p')]
+    uniqs = nubBy ((==) `on` fst) elements
+    set = foldr (\(k,v) t -> M.bind k v t) M.Empty elements
+    present = all (\(k,v) -> M.lookup k set == Just v) uniqs
+    nonpresent = not $ any (\k -> isJust (M.lookup k set)) ((-1) : [n + 1 | (n, _) <- elements])
 
 prop_tails :: [Int] -> Bool
 prop_tails xs = suffixes xs == tails xs
