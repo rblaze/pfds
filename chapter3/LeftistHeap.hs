@@ -3,7 +3,6 @@ module LeftistHeap where
 data Heap a = Empty
             | Heap !Int !a !(Heap a) !(Heap a)
 
-
 merge :: Ord a => Heap a -> Heap a -> Heap a
 merge Empty heap = heap
 merge heap Empty = heap
