@@ -1,34 +1,45 @@
 module LeftistHeap where
 
-data Heap a = Empty
-            | Heap !Int !a !(Heap a) !(Heap a)
+import BasicHeap
 
-merge :: Ord a => Heap a -> Heap a -> Heap a
+data LeftHeap a = Empty
+                | Node !Int !a !(LeftHeap a) !(LeftHeap a)
+
+newtype LHeap a = LHeap (LeftHeap a)
+
+instance Heap LHeap where
+    empty = LHeap Empty
+    insert val (LHeap heap) = LHeap $ insert' val heap
+    findMin (LHeap heap) = findMin' heap
+    deleteMin (LHeap heap) = LHeap $ deleteMin' heap
+    toList (LHeap heap) = toList' heap
+
+findMin' :: LeftHeap a -> Maybe a
+findMin' Empty = Nothing
+findMin' (Node _ val _ _) = Just val
+
+deleteMin' :: Ord a => LeftHeap a -> LeftHeap a
+deleteMin' Empty = error "heap underflow"
+deleteMin' (Node _ _ left right) = merge left right
+
+insert' :: Ord a => a -> LeftHeap a -> LeftHeap a
+insert' val = merge (Node 1 val Empty Empty)
+
+toList' :: LeftHeap a -> [a]
+toList' Empty = []
+toList' (Node _ val left right) = val : toList' left ++ toList' right
+
+merge :: Ord a => LeftHeap a -> LeftHeap a -> LeftHeap a
 merge Empty heap = heap
 merge heap Empty = heap
-merge left@(Heap _ lval ll lr) right@(Heap _ rval rl rr)
+merge left@(Node _ lval ll lr) right@(Node _ rval rl rr)
     | lval < rval   = makeT lval ll $ merge lr right
     | otherwise     = makeT rval rl $ merge left rr
   where
-    rank :: Heap a -> Int
+    rank :: LeftHeap a -> Int
     rank Empty = 0
-    rank (Heap r _ _ _) = r
+    rank (Node r _ _ _) = r
 
     makeT val ltree rtree
-        | rank ltree >= rank rtree  = Heap (rank rtree + 1) val ltree rtree
-        | otherwise                 = Heap (rank ltree + 1) val rtree ltree
-
-insert :: Ord a => a -> Heap a -> Heap a
-insert val = merge (Heap 1 val Empty Empty)
-
-findMin :: Heap a -> Maybe a
-findMin Empty = Nothing
-findMin (Heap _ val _ _) = Just val
-
-deleteMin :: Ord a => Heap a -> Heap a
-deleteMin Empty = error "heap underflow"
-deleteMin (Heap _ _ left right) = merge left right
-
-toList :: Heap a -> [a]
-toList Empty = []
-toList (Heap _ val left right) = val : toList left ++ toList right
+        | rank ltree >= rank rtree  = Node (rank rtree + 1) val ltree rtree
+        | otherwise                 = Node (rank ltree + 1) val rtree ltree
