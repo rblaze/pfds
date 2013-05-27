@@ -14,7 +14,8 @@ import LeftistHeap
 import PFDS33
 import PFDS34
 
-import BinominalHeap
+import qualified BinominalHeap
+import qualified PFDS36
 
 main :: IO ()
 main = defaultMain tests
@@ -24,7 +25,8 @@ tests = [
     heapTests "basic heap" (undefined :: LHeap Int),
     heapTests "better fromList" (undefined :: LHeap33 Int),
     heapTests "weight heap" (undefined :: LHeap34 Int),
-    heapTests "binominal heap" (undefined :: BinomHeap Int)
+    heapTests "binominal heap" (undefined :: BinominalHeap.BinomHeap Int),
+    heapTests "binominal heap w/o rank" (undefined :: PFDS36.BinomHeap Int)
   ]
 
 heapTests :: (Arbitrary a, Show a, Ord a, Heap h) => String -> h a -> Test
