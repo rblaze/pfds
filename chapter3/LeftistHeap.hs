@@ -1,3 +1,4 @@
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 module LeftistHeap where
 
 import BasicHeap
@@ -7,7 +8,7 @@ data LeftHeap a = Empty
 
 newtype LHeap a = LHeap (LeftHeap a)
 
-instance Heap LHeap where
+instance Ord a => Heap (LHeap a) a where
     empty = LHeap Empty
     insert val (LHeap heap) = LHeap $ insert' val heap
     findMin (LHeap heap) = findMin' heap

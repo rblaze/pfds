@@ -1,3 +1,4 @@
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 module BinominalHeap where
 
 import BasicHeap
@@ -8,7 +9,7 @@ type BiHeap a = [BiTree a]
 
 newtype BinomHeap a = BinomHeap (BiHeap a)
 
-instance Heap BinomHeap where
+instance Ord a => Heap (BinomHeap a) a where
     empty = BinomHeap []
     insert val (BinomHeap heap) = BinomHeap $ insert' val heap
     findMin (BinomHeap heap) = findMin' heap

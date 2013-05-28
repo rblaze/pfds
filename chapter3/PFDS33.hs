@@ -1,3 +1,4 @@
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 module PFDS33 where
 
 import BasicHeap
@@ -5,7 +6,7 @@ import LeftistHeap
 
 newtype LHeap33 a = LHeap33 (LeftHeap a)
 
-instance Heap LHeap33 where
+instance Ord a => Heap (LHeap33 a) a where
     empty = LHeap33 Empty
     insert val (LHeap33 heap) = LHeap33 $ insert' val heap
     findMin (LHeap33 heap) = findMin' heap
