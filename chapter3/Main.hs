@@ -22,6 +22,7 @@ import BasicTree as BT
 import qualified RBTree as RB
 
 import qualified PFDS39
+import qualified PFDS310
 
 main :: IO ()
 main = defaultMain tests
@@ -34,16 +35,21 @@ tests = [
     heapTests "binominal heap" (undefined :: BinominalHeap.BinomHeap Int),
     heapTests "binominal heap w/o rank" (undefined :: PFDS36.BinomHeap Int),
     heapTests "cached heap" (undefined :: PFDS37.CachedHeap (PFDS36.BinomHeap Int) Int),
-    treeTests "basic tree" unordCreate unpack,
-    treeTests "fromOrdList" ordCreate unpack
+    treeTests "basic tree" unordCreate39 unpack39,
+    treeTests "fromOrdList" ordCreate unpack39,
+    treeTests "fast balance" unordCreate310 unpack310
   ]
     where
-    unordCreate :: [Int] -> RB.RedBlackTree Int
-    unordCreate = foldr BT.insert BT.empty
-    unpack :: RB.RedBlackTree Int -> RB.RBTree Int
-    unpack (RB.RedBlackTree tree) = tree
+    unordCreate39 :: [Int] -> RB.RedBlackTree Int
+    unordCreate39 = foldr BT.insert BT.empty
+    unpack39 :: RB.RedBlackTree Int -> RB.RBTree Int
+    unpack39 (RB.RedBlackTree tree) = tree
     ordCreate :: [Int] -> RB.RedBlackTree Int
     ordCreate xs = PFDS39.fromOrdList $ sort xs
+    unordCreate310 :: [Int] -> PFDS310.FastTree Int
+    unordCreate310 = foldr BT.insert BT.empty
+    unpack310 :: PFDS310.FastTree Int -> RB.RBTree Int
+    unpack310 (PFDS310.FastTree tree) = tree
 
 heapTests :: (Arbitrary a, Show a, Ord a, Heap h a) => String -> h -> Test
 heapTests name heaptype = testGroup name [
