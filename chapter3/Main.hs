@@ -18,6 +18,7 @@ import qualified BinominalHeap
 import qualified PFDS36
 import qualified PFDS37
 
+import BasicTree as BT
 import qualified RBTree as RB
 
 main :: IO ()
@@ -31,10 +32,15 @@ tests = [
     heapTests "binominal heap" (undefined :: BinominalHeap.BinomHeap Int),
     heapTests "binominal heap w/o rank" (undefined :: PFDS36.BinomHeap Int),
     heapTests "cached heap" (undefined :: PFDS37.CachedHeap (PFDS36.BinomHeap Int) Int),
-    testProperty "tree balanced" prop_treeBalanced,
-    testProperty "tree contains all elements" prop_allElementsPresentInTree,
-    testProperty "tree not contains missing elements" prop_noneElementsPresentInTree
+    testProperty "tree balanced" (prop_treeBalanced unordRBCreate),
+    testProperty "tree contains all elements" (prop_allElementsPresentInTree unordCreate),
+    testProperty "tree not contains missing elements" (prop_noneElementsPresentInTree unordCreate)
   ]
+    where
+    unordCreate :: [Int] -> RB.RedBlackTree Int
+    unordCreate xs = foldr BT.insert (BT.empty) xs
+    unordRBCreate :: [Int] -> RB.RBTree Int
+    unordRBCreate xs = let RB.RedBlackTree tree = unordCreate xs in tree
 
 heapTests :: (Arbitrary a, Show a, Ord a, Heap h a) => String -> h -> Test
 heapTests name heaptype = testGroup name [
@@ -54,22 +60,23 @@ prop_heapElementsSorted hp xs = sort xs == unroll heap
                 Nothing -> []
                 Just v  -> v : unroll (deleteMin h)
 
-prop_treeBalanced :: [Int] -> Bool
-prop_treeBalanced xs = verifyColors tree && verifyDepth tree
+prop_allElementsPresentInTree :: (Ord a, BT.Tree t a) => ([a] -> t) -> [a] -> Bool
+prop_allElementsPresentInTree create xs = all (`BT.member` tree) xs
     where
-    tree = foldr RB.insert RB.Empty xs
+    tree = create xs
 
-prop_allElementsPresentInTree :: [Int] -> Bool
-prop_allElementsPresentInTree xs = all (`RB.member` tree) xs
+prop_noneElementsPresentInTree :: (Num a, Ord a, BT.Tree t a) => ([a] -> t) -> [a] -> Bool
+prop_noneElementsPresentInTree create xs = not $ any (`BT.member` tree) $ map (+ delta) xs
     where
-    tree = foldr RB.insert RB.Empty xs
+    delta = 1 + maximum xs - minimum xs
+    tree = create xs
 
-prop_noneElementsPresentInTree :: [Int] -> Bool
-prop_noneElementsPresentInTree xs = not $ any (`RB.member` tree) $ map (\x -> x * 2 + 1) xs
+prop_treeBalanced :: (Ord a) => ([a] -> RB.RBTree a) -> [a] -> Bool
+prop_treeBalanced create xs = verifyColors tree && verifyDepth tree
     where
-    tree = foldr (RB.insert . (* 2)) RB.Empty xs
+    tree = create xs
 
-verifyColors :: RB.Tree a -> Bool
+verifyColors :: RB.RBTree a -> Bool
 verifyColors RB.Empty = True
 verifyColors (RB.Node c left _ right) = checkChilds && verifyColors left && verifyColors right
     where
@@ -79,7 +86,7 @@ verifyColors (RB.Node c left _ right) = checkChilds && verifyColors left && veri
     color RB.Empty = RB.Black
     color (RB.Node col _ _ _) = col
 
-verifyDepth :: RB.Tree a -> Bool
+verifyDepth :: RB.RBTree a -> Bool
 verifyDepth tree = checkDepth 0 tree
     where
     depth = getDepth 0 tree
