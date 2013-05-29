@@ -21,6 +21,8 @@ import qualified PFDS37
 import BasicTree as BT
 import qualified RBTree as RB
 
+import qualified PFDS39
+
 main :: IO ()
 main = defaultMain tests
 
@@ -32,20 +34,28 @@ tests = [
     heapTests "binominal heap" (undefined :: BinominalHeap.BinomHeap Int),
     heapTests "binominal heap w/o rank" (undefined :: PFDS36.BinomHeap Int),
     heapTests "cached heap" (undefined :: PFDS37.CachedHeap (PFDS36.BinomHeap Int) Int),
-    testProperty "tree balanced" (prop_treeBalanced unordRBCreate),
-    testProperty "tree contains all elements" (prop_allElementsPresentInTree unordCreate),
-    testProperty "tree not contains missing elements" (prop_noneElementsPresentInTree unordCreate)
+    treeTests "basic tree" unordCreate unpack,
+    treeTests "fromOrdList" ordCreate unpack
   ]
     where
     unordCreate :: [Int] -> RB.RedBlackTree Int
-    unordCreate xs = foldr BT.insert (BT.empty) xs
-    unordRBCreate :: [Int] -> RB.RBTree Int
-    unordRBCreate xs = let RB.RedBlackTree tree = unordCreate xs in tree
+    unordCreate = foldr BT.insert BT.empty
+    unpack :: RB.RedBlackTree Int -> RB.RBTree Int
+    unpack (RB.RedBlackTree tree) = tree
+    ordCreate :: [Int] -> RB.RedBlackTree Int
+    ordCreate xs = PFDS39.fromOrdList $ sort xs
 
 heapTests :: (Arbitrary a, Show a, Ord a, Heap h a) => String -> h -> Test
 heapTests name heaptype = testGroup name [
     testProperty "heap contains all elements" (prop_allElementsPresent heaptype),
     testProperty "heap elements sorted" (prop_heapElementsSorted heaptype)
+  ]
+
+treeTests :: (Arbitrary a, Show a, Ord a, Num a, BT.Tree t a) => String -> ([a] -> t) -> (t -> RB.RBTree a) -> Test
+treeTests name create unpack = testGroup name [
+    testProperty "tree balanced" (prop_treeBalanced (unpack . create)),
+    testProperty "tree contains all elements" (prop_allElementsPresentInTree create),
+    testProperty "tree not contains missing elements" (prop_noneElementsPresentInTree create)
   ]
 
 prop_allElementsPresent :: (Ord a, Heap h a) => h -> [a] -> Bool

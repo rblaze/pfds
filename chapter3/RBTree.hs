@@ -4,11 +4,13 @@ module RBTree where
 import BasicTree
 
 data Color = Red | Black
-    deriving Eq
+    deriving (Eq, Show)
 data RBTree a = Empty
               | Node !Color !(RBTree a) a !(RBTree a)
+  deriving Show
 
 newtype RedBlackTree a = RedBlackTree (RBTree a)
+  deriving Show
 
 instance Ord a => Tree (RedBlackTree a) a where
     empty = RedBlackTree Empty
