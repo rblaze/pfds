@@ -55,9 +55,9 @@ prop_heapElementsSorted hp xs = sort xs == unroll heap
                 Just v  -> v : unroll (deleteMin h)
 
 prop_treeBalanced :: [Int] -> Bool
-prop_treeBalanced xs = verifyColors $ mktree xs
+prop_treeBalanced xs = verifyColors tree && verifyDepth tree
     where
-    mktree = foldr RB.insert RB.Empty
+    tree = foldr RB.insert RB.Empty xs
 
 prop_allElementsPresentInTree :: [Int] -> Bool
 prop_allElementsPresentInTree xs = all (`RB.member` tree) xs
@@ -78,3 +78,15 @@ verifyColors (RB.Node c left _ right) = checkChilds && verifyColors left && veri
                     RB.Red   -> (color left == RB.Black) && (color right == RB.Black)
     color RB.Empty = RB.Black
     color (RB.Node col _ _ _) = col
+
+verifyDepth :: RB.Tree a -> Bool
+verifyDepth tree = checkDepth 0 tree
+    where
+    depth = getDepth 0 tree
+    addDepth :: Int -> RB.Color -> Int
+    addDepth n color = if color == RB.Black then n + 1 else n
+    getDepth n RB.Empty = n
+    getDepth n (RB.Node color left _ _) = getDepth (addDepth n color) left
+    checkDepth n RB.Empty = n == depth
+    checkDepth n (RB.Node color left _ right) = let d = addDepth n color
+                                                 in checkDepth d left && checkDepth d right
