@@ -1,4 +1,4 @@
 pfds
 ====
 
-Exercises from Okasaki book
+Exercises from Okasaki's book
