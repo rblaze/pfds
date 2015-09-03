@@ -12,6 +12,7 @@ import BasicHeap
 import qualified Queue as Q
 import qualified Deque as D
 import qualified SplayHeap as S
+import qualified PairingHeap as P
 
 main :: IO ()
 main = defaultMain tests
@@ -30,7 +31,8 @@ tests = [
       ],
     heapTests "splay heap" (Proxy :: Proxy (S.SplayHeap Int)) [
         testProperty "toSortedList returns sorted elements" (prop_splayToSortedListIsSorted :: [Int] -> Bool)
-      ]
+      ],
+    heapTests "pairing heap" (Proxy :: Proxy (P.PairingHeap Int)) []
   ]
 
 heapTests :: (Arbitrary a, Show a, Ord a, Heap h a) => String -> Proxy h -> [Test] -> Test
