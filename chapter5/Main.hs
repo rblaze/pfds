@@ -13,6 +13,7 @@ import qualified Queue as Q
 import qualified Deque as D
 import qualified SplayHeap as S
 import qualified PairingHeap as P
+import qualified BinaryPairingHeap as B
 
 main :: IO ()
 main = defaultMain tests
@@ -32,7 +33,11 @@ tests = [
     heapTests "splay heap" (Proxy :: Proxy (S.SplayHeap Int)) [
         testProperty "toSortedList returns sorted elements" (prop_splayToSortedListIsSorted :: [Int] -> Bool)
       ],
-    heapTests "pairing heap" (Proxy :: Proxy (P.PairingHeap Int)) []
+    heapTests "pairing heap" (Proxy :: Proxy (P.PairingHeap Int)) [],
+    heapTests "binary pairing heap" (Proxy :: Proxy (B.BinaryPairingHeap Int)) [
+        testProperty "converted heap contains all elements" (prop_convertedAllElementsPresent :: [Int] -> Bool),
+        testProperty "converted heap elements sorted" (prop_convertedHeapElementsSorted :: [Int] -> Bool)
+      ]
   ]
 
 heapTests :: (Arbitrary a, Show a, Ord a, Heap h a) => String -> Proxy h -> [Test] -> Test
@@ -57,6 +62,18 @@ prop_splayToSortedListIsSorted :: Ord a => [a] -> Bool
 prop_splayToSortedListIsSorted xs = sort xs == S.toSortedList heap
     where
     heap = fromList xs
+
+prop_convertedAllElementsPresent :: Ord a => [a] -> Bool
+prop_convertedAllElementsPresent xs = sort xs == sort (toList heap)
+    where heap = B.convert $ fromList xs
+
+prop_convertedHeapElementsSorted :: Ord a => [a] -> Bool
+prop_convertedHeapElementsSorted xs = sort xs == unroll heap
+    where
+    heap = B.convert $ fromList xs
+    unroll h = case findMin h of
+                Nothing -> []
+                Just v  -> v : unroll (deleteMin h)
 
 prop_inout :: [Int] -> Bool
 prop_inout xs = xs == popAll queue
