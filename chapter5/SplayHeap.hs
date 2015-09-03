@@ -49,3 +49,7 @@ deleteMin' Empty = error "deletion from empty heap"
 deleteMin' (Node Empty _ right) = right
 deleteMin' (Node (Node Empty _ right') v right) = Node right' v right
 deleteMin' (Node (Node left' v' right') v right) = Node (deleteMin' left') v' (Node right' v right)
+
+toSortedList :: SplayHeap a -> [a]
+toSortedList Empty = []
+toSortedList (Node left v right) = toSortedList left ++ v : toSortedList right
