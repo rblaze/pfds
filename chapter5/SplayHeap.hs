@@ -11,6 +11,8 @@ instance Ord a => Heap (SplayHeap a) a where
     empty = Empty
     insert = insert'
     toList = toList'
+    findMin = findMin'
+    deleteMin = deleteMin'
 
 insert' :: Ord a => a -> SplayHeap a -> SplayHeap a
 insert' a t = Node (smaller a t) a (bigger a t)
@@ -26,13 +28,24 @@ bigger p (Node (Node left' v' right') v right)
 
 smaller :: Ord a => a -> SplayHeap a -> SplayHeap a
 smaller _ Empty = Empty
-smaller p (Node left v right)
+smaller p (Node left v _)
     | v > p = smaller p left
 smaller _ n@(Node _ _ Empty) = n
 smaller p (Node left v (Node left' v' right'))
     | v' > p = Node left v (smaller p left')
-    | otherwise = Node (Node left' v left) v' (smaller p right')
+    | otherwise = Node (Node left v left') v' (smaller p right')
 
 toList' :: SplayHeap a -> [a]
 toList' Empty = []
 toList' (Node left v right) = v : toList' left ++ toList' right
+
+findMin' :: SplayHeap a -> Maybe a
+findMin' Empty = Nothing
+findMin' (Node Empty v _) = Just v
+findMin' (Node n _ _) = findMin' n
+
+deleteMin' :: SplayHeap a -> SplayHeap a
+deleteMin' Empty = error "deletion from empty heap"
+deleteMin' (Node Empty _ right) = right
+deleteMin' (Node (Node Empty _ right') v right) = Node right' v right
+deleteMin' (Node (Node left' v' right') v right) = Node (deleteMin' left') v' (Node right' v right)
