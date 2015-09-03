@@ -4,10 +4,14 @@ module Main where
 
 import Test.Framework (defaultMain, testGroup, Test)
 import Test.Framework.Providers.QuickCheck2 (testProperty)
-import Data.List(foldl')
+import Test.QuickCheck (Arbitrary)
+import Data.List (foldl', sort)
+import Data.Proxy
 
+import BasicHeap
 import qualified Queue as Q
 import qualified Deque as D
+import qualified SplayHeap as S
 
 main :: IO ()
 main = defaultMain tests
@@ -23,8 +27,27 @@ tests = [
         testProperty "keeps all elements in complex case" prop_deque_inout3,
         testProperty "keeps all elements on reverse" prop_deque_rev_inout,
         testProperty "keeps all elements on reverse in complex case" prop_deque_rev_inout3
-      ]
+      ],
+    heapTests "splay heap" (Proxy :: Proxy (S.SplayHeap Int))
   ]
+
+heapTests :: (Arbitrary a, Show a, Ord a, Heap h a) => String -> Proxy h -> Test
+heapTests name heaptype = testGroup name [
+    testProperty "heap contains all elements" (prop_allElementsPresent heaptype),
+    testProperty "heap elements sorted" (prop_heapElementsSorted heaptype)
+  ]
+
+prop_allElementsPresent :: (Ord a, Heap h a) => Proxy h -> [a] -> Bool
+prop_allElementsPresent hp xs = sort xs == sort (toList heap)
+    where heap = fromList xs `asProxyTypeOf` hp
+
+prop_heapElementsSorted :: (Ord a, Heap h a) => Proxy h -> [a] -> Bool
+prop_heapElementsSorted hp xs = sort xs == unroll heap
+    where
+    heap = fromList xs `asProxyTypeOf` hp
+    unroll h = case findMin h of
+                Nothing -> []
+                Just v  -> v : unroll (deleteMin h)
 
 prop_inout :: [Int] -> Bool
 prop_inout xs = xs == popAll queue
