@@ -30,20 +30,20 @@ treeTests name treetype = testGroup name [
 prop_allElementsPresentInTree :: (Ord a, Tree t a) => Proxy t -> [a] -> Bool
 prop_allElementsPresentInTree treetype xs = all (`member` tree) xs
     where
-    tree = (foldr insert empty xs) `asProxyTypeOf` treetype
+    tree = foldr insert empty xs `asProxyTypeOf` treetype
 
 prop_noneElementsPresentInTree :: (Num a, Ord a, Tree t a) => Proxy t -> [a] -> Bool
 prop_noneElementsPresentInTree treetype xs = not $ any (`member` tree) $ map (+ delta) xs
     where
     delta = 1 + maximum xs - minimum xs
-    tree = (foldr insert empty xs) `asProxyTypeOf` treetype
+    tree = foldr insert empty xs `asProxyTypeOf` treetype
 
 prop_treeBalanced :: Ord a => [a] -> Bool
 prop_treeBalanced xs = verifyColors tree && verifyDepth tree
     where
-    tree = foldr insert empty xs
+    tree = RB.treeData $ foldr insert empty xs
 
-verifyColors :: RB.RBTree a -> Bool
+verifyColors :: RB.RBTreeData a -> Bool
 verifyColors RB.Empty = True
 verifyColors (RB.Node _ c left _ right) = checkChilds && verifyColors left && verifyColors right
     where
@@ -53,7 +53,7 @@ verifyColors (RB.Node _ c left _ right) = checkChilds && verifyColors left && ve
     color RB.Empty = RB.Black
     color (RB.Node _ col _ _ _) = col
 
-verifyDepth :: RB.RBTree a -> Bool
+verifyDepth :: RB.RBTreeData a -> Bool
 verifyDepth tree = checkDepth 0 tree
     where
     depth = getDepth 0 tree
@@ -65,10 +65,10 @@ verifyDepth tree = checkDepth 0 tree
     checkDepth n (RB.Node _ color left _ right) = let d = addDepth n color
                                                    in checkDepth d left && checkDepth d right
 
-prop_deletedElementsNotMembers :: (Num a, Ord a, Tree t a) => Proxy t -> [a] -> Bool
-prop_deletedElementsNotMembers treetype xs = (not $ any (`member` tree) ys) && (all (`member` tree) zs')
+prop_deletedElementsNotMembers :: (Show a, Num a, Ord a, Tree t a) => Proxy t -> [a] -> Bool
+prop_deletedElementsNotMembers treetype xs = not (any (`member` tree) ys) && all (`member` tree) zs'
     where
-    (ys, zs) = splitAt (length xs `div` 2) xs
-    zs' = filter (\e -> not (e `elem` ys)) zs
-    basetree = (foldr insert empty xs) `asProxyTypeOf` treetype
+    (ys, zs) = splitAt ((length xs `div` 2) + 1) xs
+    zs' = filter (`notElem` ys) zs
+    basetree = foldr insert empty xs `asProxyTypeOf` treetype
     tree = foldr delete basetree ys
